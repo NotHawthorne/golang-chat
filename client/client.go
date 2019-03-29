@@ -38,6 +38,7 @@ func dialService(connString string, userName string, pass string) {
 	conn, err := net.Dial("tcp", connString)
 	scanner := bufio.NewScanner(os.Stdin)
 	for err != nil {
+		fmt.Printf("\033[2K\rerror connecting to server, reconnecting...")
 		conn, err = net.Dial("tcp", connString)
 	}
 	fmt.Fprintf(conn, userName + "|" + pass + "\n")
@@ -47,7 +48,7 @@ func dialService(connString string, userName string, pass string) {
 		for scanner.Scan() {
 			text := scanner.Text()
 			if (text != "") {
-				fmt.Fprintf(conn, userName + ": " + text + "\n")
+				_, err = fmt.Fprintf(conn, userName + ": " + text + "\n")
 				fmt.Printf("\033[A\033[2K")
 			}
 		}
@@ -59,7 +60,7 @@ func main() {
 		fmt.Printf("usage: ./program <username>\n")
 		os.Exit(1)
 	}
-	fmt.Println("Password: ")
+	fmt.Printf("Password: ")
 	bytePass, _ := terminal.ReadPassword(int(syscall.Stdin))
 	hasher := md5.New()
 	hasher.Write(bytePass)
@@ -68,7 +69,6 @@ func main() {
 	servers := fetchServers()
 	mainServer := strings.Split(servers[0], "|")
 	arg := os.Args[1:]
-	go dialService(mainServer[0], arg[0], passHash)
 	fmt.Printf(arg[0] + ": ")
-	for { }
+	dialService(mainServer[0], arg[0], passHash)
 }

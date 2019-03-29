@@ -8,6 +8,23 @@ import (
 	"strings"
 )
 
+func privateMessage(msg string, usr user, usrlist *[]user) int {
+	tmp := strings.Split(msg, " ")
+	lst := *usrlist
+	if tmp[1] == "/whisper" {
+		for i := range lst {
+			if lst[i].Name == tmp[2] {
+				lst[i].Conn.Write([]byte("\033[35;1m" + usr.Name + " whispers: \033[0;0m" + strings.Join(tmp[3:], " ") + "\n"))
+				usr.Conn.Write([]byte("\033[35;1mto " + lst[i].Name +":\033[0;0m " + strings.Join(tmp[3:], " ") + "\n"))
+				return 1
+			}
+		}
+		usr.Conn.Write([]byte("invalid user\n"))
+		return -1
+	}
+	return 0
+}
+
 func addMsg(msg string, msgarr *[]string) {
 	tmp := *msgarr
 	tmp = append(tmp, msg)
@@ -20,7 +37,8 @@ func endConn(usr user, usrlist *[]user, msgarr *[]string) {
 		if ret[i].Conn == usr.Conn {
 			*usrlist = append(ret[0:i], ret[i + 1:len(ret)]...)
 			fmt.Printf("user %s left\n", usr.Name)
-			addMsg("user " + usr.Name + " left\n", msgarr)
+			addMsg("\033[0;1muser " + usr.Name + " left\033[0;0m\n", msgarr)
+			usr.Conn.Close()
 			return
 		}
 	}
@@ -28,6 +46,7 @@ func endConn(usr user, usrlist *[]user, msgarr *[]string) {
 
 func sendMsgs(msgarr *[]string, conn_list *[]net.Conn) {
 	for {
+		fmt.Printf("")
 		for _, msg := range *msgarr {
 			for _, inst := range *conn_list { inst.Write([]byte(msg)) }
 			ret := *msgarr
@@ -56,7 +75,7 @@ func waitForHandshake(conn net.Conn, msgarr *[]string, usrlist *[]user) {
 			break
 		}
 		fmt.Printf("user %s joined\n", usr.Name)
-		addMsg("user " + usr.Name + " joined\n", msgarr)
+		addMsg("\033[0;1muser " + usr.Name + " joined\033[0;0m\n", msgarr)
 		break
 	}
 	go handleConn(conn, msgarr, usrlist)
@@ -71,7 +90,9 @@ func handleConn(conn net.Conn, msgarr *[]string, usrs *[]user) {
 			endConn(usr, usrs, msgarr)
 			return
 		}
-		*msgarr = append(*msgarr, string(data))
+		if privateMessage(string(data), usr, usrs) == 0 {
+			*msgarr = append(*msgarr, string(data))
+		}
 	}
 }
 
@@ -90,7 +111,7 @@ func listen(port string) {
 		if err != nil { fmt.Printf("error\n") }
 		conn = append(conn, conn_inst)
 		usrs = append(usrs, user{conn_inst, "", "", ""})
-		conn_inst.Write([]byte("Message Of The Day: Peil Hatrick Narris\n"))
+		conn_inst.Write([]byte("\033[32;1mMessage Of The Day: Peil Hatrick Narris\033[0;0m\n"))
 		go waitForHandshake(conn_inst, &test, &usrs)
 		go sendMsgs(&test, &conn)
 	}
