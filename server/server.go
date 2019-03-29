@@ -5,26 +5,70 @@ import (
 	"os"
 	"net"
 	"bufio"
+	"strings"
 )
+
+func addMsg(msg string, msgarr *[]string) {
+	tmp := *msgarr
+	tmp = append(tmp, msg)
+	*msgarr = tmp
+}
+
+func endConn(usr user, usrlist *[]user, msgarr *[]string) {
+	ret := *usrlist
+	for i := range ret {
+		if ret[i].Conn == usr.Conn {
+			*usrlist = append(ret[0:i], ret[i + 1:len(ret)]...)
+			fmt.Printf("user %s left\n", usr.Name)
+			addMsg("user " + usr.Name + " left\n", msgarr)
+			return
+		}
+	}
+}
 
 func sendMsgs(msgarr *[]string, conn_list *[]net.Conn) {
 	for {
 		for _, msg := range *msgarr {
-			for _, inst := range *conn_list {
-				inst.Write([]byte(msg))
-				fmt.Printf("sent message\n")
-			}
+			for _, inst := range *conn_list { inst.Write([]byte(msg)) }
 			ret := *msgarr
 			*msgarr = ret[1:]
 		}
 	}
 }
 
-func handleConn(conn net.Conn, msgarr *[]string) {
+func waitForHandshake(conn net.Conn, msgarr *[]string, usrlist *[]user) {
+	usr := findUser(conn, usrlist)
 	for {
-		data, err := bufio.NewReader(conn).ReadString('\n')
+		data, _ := bufio.NewReader(usr.Conn).ReadString('\n')
+		tmp := strings.TrimSuffix(string(data), "\n")
+		tmpVals := strings.Split(tmp, "|")
+		usr.Name = tmpVals[0]
+		usr.Pass = tmpVals[1]
+		updateUser(usr, usrlist)
+		ret := validateUser(usr)
+		if ret == 0 {
+			fmt.Printf("user %s failed validation\n", usr.Name)
+			endConn(usr, usrlist, msgarr)
+			return
+		}
+		if ret == 2 {
+			fmt.Printf("user %s registered a new account!\n", usr.Name)
+			break
+		}
+		fmt.Printf("user %s joined\n", usr.Name)
+		addMsg("user " + usr.Name + " joined\n", msgarr)
+		break
+	}
+	go handleConn(conn, msgarr, usrlist)
+	return
+}
+
+func handleConn(conn net.Conn, msgarr *[]string, usrs *[]user) {
+	usr := findUser(conn, usrs)
+	for {
+		data, err := bufio.NewReader(usr.Conn).ReadString('\n')
 		if (err != nil) {
-			fmt.Printf("user left\n")
+			endConn(usr, usrs, msgarr)
 			return
 		}
 		*msgarr = append(*msgarr, string(data))
@@ -33,6 +77,7 @@ func handleConn(conn net.Conn, msgarr *[]string) {
 
 func listen(port string) {
 	conn := []net.Conn{}
+	usrs := []user{}
 	ln, err := net.Listen("tcp", ":" + port)
 	if err != nil {
 		fmt.Printf("error: unable to listen on given port " + port)
@@ -44,7 +89,9 @@ func listen(port string) {
 		conn_inst, err := ln.Accept()
 		if err != nil { fmt.Printf("error\n") }
 		conn = append(conn, conn_inst)
-		go handleConn(conn_inst, &test)
+		usrs = append(usrs, user{conn_inst, "", "", ""})
+		conn_inst.Write([]byte("Message Of The Day: Peil Hatrick Narris\n"))
+		go waitForHandshake(conn_inst, &test, &usrs)
 		go sendMsgs(&test, &conn)
 	}
 }
