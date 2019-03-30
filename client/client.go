@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"crypto/md5"
 	"encoding/hex"
+	//"github.com/jroimartin/gocui"
 )
 
 func fetchServers() []string {
@@ -55,6 +56,22 @@ func dialService(connString string, userName string, pass string) {
 	}
 }
 
+/*func initGui() {
+	g, _ := gocui.NewGui(gocui.OutputNormal)
+	g.MainLoop()
+	maxX, maxY := g.Size()
+	g.SetView("viewname", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2)
+	g.Update(func(g *gocui.Gui) error {
+		v, err := g.View("viewname")
+		if err != nil {
+			// handle error
+		}
+		v.Clear()
+		fmt.Fprintln(v, "Writing from different goroutines")
+		return nil
+	})
+}*/
+
 func main() {
 	if (len(os.Args) != 2) {
 		fmt.Printf("usage: ./program <username>\n")
@@ -70,5 +87,6 @@ func main() {
 	mainServer := strings.Split(servers[0], "|")
 	arg := os.Args[1:]
 	fmt.Printf(arg[0] + ": ")
+	//initGui()
 	dialService(mainServer[0], arg[0], passHash)
 }
