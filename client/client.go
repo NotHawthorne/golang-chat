@@ -6,13 +6,11 @@ import (
 	"net"
 	"net/http"
 	"io/ioutil"
-	//"bufio"
 	"strings"
 	"golang.org/x/crypto/ssh/terminal"
 	"syscall"
 	"crypto/md5"
 	"encoding/hex"
-	//"github.com/jroimartin/gocui"
 )
 
 func fetchServers() []string {
@@ -28,42 +26,16 @@ func clearTerm() {
 	for i := 0; i < 90; i++ { fmt.Printf("\n") }
 }
 
-/*func listenForMessages(conn net.Conn, userName string) {
-	for {
-		reader, _ := bufio.NewReader(conn).ReadString('\n')
-		posts = append(posts, post{username: userName, message: reader, time: "0:00"})
-		//fmt.Printf("\033[2K\r%s%s: ", reader, userName)
-	}
-}*/
-
 func dialService(connString string, userName string, pass string) {
 	conn, err := net.Dial("tcp", connString)
-	//scanner := bufio.NewScanner(os.Stdin)
 	for err != nil {
 		fmt.Printf("\033[2K\rerror connecting to server, reconnecting...")
 		conn, err = net.Dial("tcp", connString)
 	}
 	fmt.Fprintf(conn, userName + "|" + pass + "\n")
-	//go listenForMessages(conn, userName)
 	defer conn.Close()
 	initGui(conn, userName, fetchServers())
 }
-
-/*func initGui() {
-	g, _ := gocui.NewGui(gocui.OutputNormal)
-	g.MainLoop()
-	maxX, maxY := g.Size()
-	g.SetView("viewname", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2)
-	g.Update(func(g *gocui.Gui) error {
-		v, err := g.View("viewname")
-		if err != nil {
-			// handle error
-		}
-		v.Clear()
-		fmt.Fprintln(v, "Writing from different goroutines")
-		return nil
-	})
-}*/
 
 func main() {
 	if (len(os.Args) != 2) {
