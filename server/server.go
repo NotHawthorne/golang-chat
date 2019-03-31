@@ -13,9 +13,9 @@ func privateMessage(msg string, usr user, usrlist *[]user) int {
 	lst := *usrlist
 	if tmp[2] == "/whisper" {
 		for i := range lst {
-			if lst[i].Name == tmp[2] {
-				lst[i].Conn.Write([]byte(usr.Name + " whispers: " + strings.Join(tmp[3:], " ") + "\n"))
-				usr.Conn.Write([]byte("to " + lst[i].Name +": " + strings.Join(tmp[3:], " ") + "\n"))
+			if lst[i].Name == tmp[3] {
+				lst[i].Conn.Write([]byte(usr.Name + " whispers: " + strings.Join(tmp[4:], " ") + "\n"))
+				usr.Conn.Write([]byte("to " + lst[i].Name +": " + strings.Join(tmp[4:], " ") + "\n"))
 				return 1
 			}
 		}
