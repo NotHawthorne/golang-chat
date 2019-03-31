@@ -11,11 +11,11 @@ import (
 func privateMessage(msg string, usr user, usrlist *[]user) int {
 	tmp := strings.Split(msg, " ")
 	lst := *usrlist
-	if tmp[1] == "/whisper" {
+	if tmp[2] == "/whisper" {
 		for i := range lst {
 			if lst[i].Name == tmp[2] {
-				lst[i].Conn.Write([]byte("\033[35;1m" + usr.Name + " whispers: \033[0;0m" + strings.Join(tmp[3:], " ") + "\n"))
-				usr.Conn.Write([]byte("\033[35;1mto " + lst[i].Name +":\033[0;0m " + strings.Join(tmp[3:], " ") + "\n"))
+				lst[i].Conn.Write([]byte(usr.Name + " whispers: " + strings.Join(tmp[3:], " ") + "\n"))
+				usr.Conn.Write([]byte("to " + lst[i].Name +": " + strings.Join(tmp[3:], " ") + "\n"))
 				return 1
 			}
 		}
@@ -37,7 +37,7 @@ func endConn(usr user, usrlist *[]user, msgarr *[]string) {
 		if ret[i].Conn == usr.Conn {
 			*usrlist = append(ret[0:i], ret[i + 1:len(ret)]...)
 			fmt.Printf("user %s left\n", usr.Name)
-			addMsg("\033[0;1muser " + usr.Name + " left\033[0;0m\n", msgarr)
+			addMsg("user " + usr.Name + " left\n", msgarr)
 			usr.Conn.Close()
 			return
 		}
@@ -75,7 +75,7 @@ func waitForHandshake(conn net.Conn, msgarr *[]string, usrlist *[]user) {
 			break
 		}
 		fmt.Printf("user %s joined\n", usr.Name)
-		addMsg("\033[0;1muser " + usr.Name + " joined\033[0;0m\n", msgarr)
+		addMsg("user " + usr.Name + " joined\n", msgarr)
 		break
 	}
 	go handleConn(conn, msgarr, usrlist)
@@ -111,7 +111,7 @@ func listen(port string) {
 		if err != nil { fmt.Printf("error\n") }
 		conn = append(conn, conn_inst)
 		usrs = append(usrs, user{conn_inst, "", "", ""})
-		conn_inst.Write([]byte("\033[32;1mMessage Of The Day: Peil Hatrick Narris\033[0;0m\n"))
+		conn_inst.Write([]byte("Message Of The Day: Peil Hatrick Narris\n"))
 		go waitForHandshake(conn_inst, &test, &usrs)
 		go sendMsgs(&test, &conn)
 	}

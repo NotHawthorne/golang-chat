@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 	"io/ioutil"
-	"bufio"
+	//"bufio"
 	"strings"
 	"golang.org/x/crypto/ssh/terminal"
 	"syscall"
@@ -28,32 +28,25 @@ func clearTerm() {
 	for i := 0; i < 90; i++ { fmt.Printf("\n") }
 }
 
-func listenForMessages(conn net.Conn, userName string) {
+/*func listenForMessages(conn net.Conn, userName string) {
 	for {
 		reader, _ := bufio.NewReader(conn).ReadString('\n')
-		fmt.Printf("\033[2K\r%s%s: ", reader, userName)
+		posts = append(posts, post{username: userName, message: reader, time: "0:00"})
+		//fmt.Printf("\033[2K\r%s%s: ", reader, userName)
 	}
-}
+}*/
 
 func dialService(connString string, userName string, pass string) {
 	conn, err := net.Dial("tcp", connString)
-	scanner := bufio.NewScanner(os.Stdin)
+	//scanner := bufio.NewScanner(os.Stdin)
 	for err != nil {
 		fmt.Printf("\033[2K\rerror connecting to server, reconnecting...")
 		conn, err = net.Dial("tcp", connString)
 	}
 	fmt.Fprintf(conn, userName + "|" + pass + "\n")
-	go listenForMessages(conn, userName)
+	//go listenForMessages(conn, userName)
 	defer conn.Close()
-	for {
-		for scanner.Scan() {
-			text := scanner.Text()
-			if (text != "") {
-				_, err = fmt.Fprintf(conn, userName + ": " + text + "\n")
-				fmt.Printf("\033[A\033[2K")
-			}
-		}
-	}
+	initGui(conn, userName, fetchServers())
 }
 
 /*func initGui() {
@@ -87,6 +80,5 @@ func main() {
 	mainServer := strings.Split(servers[0], "|")
 	arg := os.Args[1:]
 	fmt.Printf(arg[0] + ": ")
-	//initGui()
 	dialService(mainServer[0], arg[0], passHash)
 }
