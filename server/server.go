@@ -111,6 +111,11 @@ func listen(port string) {
 		if err != nil { fmt.Printf("error\n") }
 		conn = append(conn, conn_inst)
 		usrs = append(usrs, user{conn_inst, "", "", ""})
+		usrlist := ""
+		for i := range usrs {
+			usrlist += usrs[i].Name + "|"
+		}
+		conn_inst.Write([]byte(usrlist))
 		conn_inst.Write([]byte("Message Of The Day: Peil Hatrick Narris\n"))
 		go waitForHandshake(conn_inst, &test, &usrs)
 		go sendMsgs(&test, &conn)
@@ -118,6 +123,5 @@ func listen(port string) {
 }
 
 func main() {
-	arg := os.Args[1:]
-	listen(arg[0])
+	listen(os.Args[1])
 }
