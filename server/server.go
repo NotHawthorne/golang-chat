@@ -80,7 +80,6 @@ func waitForHandshake(conn net.Conn, msgarr *[]string, usrlist *[]user) {
 		for i := range usrlist_tmp {
 			usrs += usrlist_tmp[i].Name + "|"
 		}
-		usrs += usr.Name + "\n"
 		conn.Write([]byte(usrs))
 		conn.Write([]byte("Message Of The Day: Tell Melee players that mozzerella sticks and deoderant sticks are not interchangeable plz thanks"))
 		addMsg("user " + usr.Name + " joined\n", msgarr)
