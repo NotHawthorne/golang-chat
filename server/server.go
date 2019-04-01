@@ -75,6 +75,14 @@ func waitForHandshake(conn net.Conn, msgarr *[]string, usrlist *[]user) {
 			break
 		}
 		fmt.Printf("user %s joined\n", usr.Name)
+		usrlist_tmp := *usrlist
+		usrs := ""
+		for i := range usrlist_tmp {
+			usrs += usrlist_tmp[i].Name + "|"
+		}
+		usrs += usr.Name + "\n"
+		conn.Write([]byte(usrs))
+		conn.Write([]byte("Message Of The Day: Tell Melee players that mozzerella sticks and deoderant sticks are not interchangeable plz thanks"))
 		addMsg("user " + usr.Name + " joined\n", msgarr)
 		break
 	}
@@ -111,12 +119,6 @@ func listen(port string) {
 		if err != nil { fmt.Printf("error\n") }
 		conn = append(conn, conn_inst)
 		usrs = append(usrs, user{conn_inst, "", "", ""})
-		usrlist := ""
-		for i := range usrs {
-			usrlist += usrs[i].Name + "|"
-		}
-		conn_inst.Write([]byte(usrlist))
-		conn_inst.Write([]byte("Message Of The Day: Peil Hatrick Narris\n"))
 		go waitForHandshake(conn_inst, &test, &usrs)
 		go sendMsgs(&test, &conn)
 	}
