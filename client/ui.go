@@ -18,14 +18,61 @@ type post struct {
 	time     string
 }
 
-func listenForMessages(conn net.Conn, userName string, box **tui.Box, ui *tui.UI) {
+type sidebar struct {
+	box		*tui.Box
+	labels	int
+	users	[]string
+}
+
+func listenForMessages(conn net.Conn, userName string, box **tui.Box, ui *tui.UI, usersBox **tui.Box) {
+	test := 0
+	var users []string
+	users = append(users, userName)
 	for {
 		i := *box
 		reader, _ := bufio.NewReader(conn).ReadString('\n')
-		i.Append(tui.NewHBox(
-			tui.NewLabel(strings.TrimSuffix(reader, "\n")),
-		))
-		*box = i
+		str := strings.Split(reader, " ")
+		if (test == 0 || str[0] == "user") {
+			if test == 0 { users = strings.Split(reader, "|") }
+			if test != 0 { users = append(users, str[1]) }
+			x := *usersBox
+			if (test == 0) {
+				for e := range users {
+					if !strings.Contains(users[e], "\n") {
+						x.Append(tui.NewLabel(strings.TrimSuffix(users[e], "\n")))
+					}
+					if (strings.Contains(users[e], "\n")) {
+						users = append(users[0:e], users[e + 1:]...)
+					}
+				}
+			}
+			if test != 0 {
+				if (str[2] == "joined\n" && str[1] != userName) {
+					x.Append(tui.NewLabel(str[1]))
+				}
+				if (str[2] == "left\n") {
+					i := []string{}
+					for e := range users {
+						exists := 0
+						for n := range i {
+							if i[n] == users[e] { exists++ }
+						}
+						if users[e] == str[1] { x.Remove(e + 5) }
+						if exists <= 0 && users[e] != str[1] { i = append(i, users[e]) }
+					}
+					users = i
+				}
+			}
+			*usersBox = x
+		}
+		if test != 0 {
+			i.Append(tui.NewHBox(
+				tui.NewLabel(strings.TrimSuffix(reader, "\n")),
+			))
+			if (test > 100) { i.Remove(0) }
+			*box = i
+		}
+		test++
 		tmp := *ui
 		go tmp.Update(func() {
 			//...
@@ -38,10 +85,8 @@ func initGui(conn net.Conn, userName string, servers []string) {
 		tui.NewLabel("SERVERS"),
 		tui.NewLabel(servers[0]),
 		tui.NewLabel(servers[1]),
-		tui.NewLabel(""),
-		tui.NewLabel("DIRECT MESSAGES"),
-		tui.NewLabel("slackbot"),
 		tui.NewSpacer(),
+		tui.NewLabel("USERS"),
 	)
 	sidebar.SetBorder(true)
 
@@ -76,7 +121,7 @@ func initGui(conn net.Conn, userName string, servers []string) {
 		log.Fatal(err)
 	}
 
-	go listenForMessages(conn, userName, &history, &ui)
+	go listenForMessages(conn, userName, &history, &ui, &sidebar)
 	ui.SetKeybinding("Esc", func() { ui.Quit() })
 
 	if err := ui.Run(); err != nil {

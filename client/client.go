@@ -21,11 +21,6 @@ func fetchServers() []string {
 	return ret
 }
 
-func clearTerm() {
-	for i := 0; i < 90; i++ { fmt.Printf("\033[A\033[2K\r") }
-	for i := 0; i < 90; i++ { fmt.Printf("\n") }
-}
-
 func dialService(connString string, userName string, pass string) {
 	conn, err := net.Dial("tcp", connString)
 	for err != nil {
@@ -47,10 +42,9 @@ func main() {
 	hasher := md5.New()
 	hasher.Write(bytePass)
 	passHash := hex.EncodeToString(hasher.Sum(nil))
-	clearTerm()
 	servers := fetchServers()
-	mainServer := strings.Split(servers[0], "|")
+	mainServer := strings.Split(servers[1], "|")
+	fmt.Printf(servers[0] + "\n\n")
 	arg := os.Args[1:]
-	fmt.Printf(arg[0] + ": ")
 	dialService(mainServer[0], arg[0], passHash)
 }
