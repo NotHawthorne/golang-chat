@@ -61,6 +61,7 @@ func waitForHandshake(conn net.Conn, msgarr *[]string, usrlist *[]user) {
 		data, _ := bufio.NewReader(usr.Conn).ReadString('\n')
 		tmp := strings.TrimSuffix(string(data), "\n")
 		tmpVals := strings.Split(tmp, "|")
+		if (len(tmpVals) < 2) { break }
 		usr.Name = tmpVals[0]
 		usr.Pass = tmpVals[1]
 		updateUser(usr, usrlist)
