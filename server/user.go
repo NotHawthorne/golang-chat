@@ -54,6 +54,6 @@ func validateUser(usr user) int {
 	file, _ = os.OpenFile("users.db", os.O_WRONLY|os.O_APPEND, 0600)
 	_, err = file.WriteString(usr.Name + "|" + usr.Pass + "\n")
 	if (err != nil) { fmt.Printf("error\n") }
-	usr.Conn.Write([]byte("registered new account!\n"))
+	//usr.Conn.Write([]byte("registered new account!\n"))
 	return 2
 }

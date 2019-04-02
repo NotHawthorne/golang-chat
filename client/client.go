@@ -43,8 +43,7 @@ func main() {
 	hasher.Write(bytePass)
 	passHash := hex.EncodeToString(hasher.Sum(nil))
 	servers := fetchServers()
-	mainServer := strings.Split(servers[1], "|")
-	fmt.Printf(servers[0] + "\n\n")
+	mainServer := strings.Split(servers[0], "|")
 	arg := os.Args[1:]
 	dialService(mainServer[0], arg[0], passHash)
 }
